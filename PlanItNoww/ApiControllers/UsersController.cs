@@ -10,24 +10,21 @@ namespace PlanItNoww.Controllers
     {
         ILogger<UsersController> logger;
         UsersService usersService;
-        
         public UsersController(ILogger<UsersController> logger, UsersService usersService)
         {
             logger = logger;
             this.usersService = usersService;
         }
-
         [HttpGet("Entity")]
         public async Task<ActionResult<ActionRes<Users>>> Entity()
         {
             ActionRes<Users> result = new ActionRes<Users>()
             {
-                item = new Users()
+               item = new Users()
             };
 
             return Ok(result);
         }
-
         [HttpPost("Select")]
         public async Task<ActionResult<ActionRes<List<Users>>>> Select(ActionReq<UsersSelectReq> req)
         {
@@ -37,7 +34,6 @@ namespace PlanItNoww.Controllers
 
             return Ok(result);
         }
-
         [HttpPost("Insert")]
         public async Task<ActionResult<ActionRes<Users>>> Insert(ActionReq<Users> req)
         {
@@ -47,7 +43,6 @@ namespace PlanItNoww.Controllers
 
             return Ok(result);
         }
-
         [HttpPost("Update")]
         public async Task<ActionResult<ActionRes<Users>>> Update(ActionReq<Users> req)
         {
@@ -57,60 +52,25 @@ namespace PlanItNoww.Controllers
 
             return Ok(result);
         }
-
         [HttpPost("Save")]
         public async Task<ActionResult<ActionRes<Users>>> Save(ActionReq<Users> req)
         {
             ActionRes<Users> result = new ActionRes<Users>();
 
-            if (req.item.id > 0)
-            {
+            if(req.item.id > 0){
                 result.item = await usersService.Update(req.item);
-            }
-            else
-            {
+            }else{
                 result.item = await usersService.Insert(req.item);
             }
 
             return Ok(result);
         }
-
         [HttpPost("Delete")]
         public async Task<ActionResult<ActionRes<bool>>> Delete(ActionReq<UsersDeleteReq> req)
         {
             ActionRes<bool> result = new ActionRes<bool>();
 
             result.item = await usersService.Delete(req.item);
-
-            return Ok(result);
-        }
-
-        [HttpPost("GetOtp")]
-        public async Task<ActionResult<ActionRes<UsersGetOtpRes>>> GetOtp(ActionReq<UsersGetOtpReq> req)
-        {
-            ActionRes<UsersGetOtpRes> result = new ActionRes<UsersGetOtpRes>();
-
-            result.item = await usersService.GetOtp(req.item);
-
-            return Ok(result);
-        }
-
-        [HttpPost("Login")]
-        public async Task<ActionResult<ActionRes<UsersContext>>> Login(ActionReq<UsersLoginReq> req)
-        {
-            ActionRes<UsersContext> result = new ActionRes<UsersContext>();
-
-            result.item = await usersService.Login(req.item);
-
-            return Ok(result);
-        }
-
-        [HttpPost("RefreshToken")]
-        public async Task<ActionResult<ActionRes<UsersContext>>> RefreshToken(ActionReq<UsersRefereshTokenReq> req)
-        {
-            ActionRes<UsersContext> result = new ActionRes<UsersContext>();
-
-            result.item = await usersService.RefreshToken(req.item);
 
             return Ok(result);
         }

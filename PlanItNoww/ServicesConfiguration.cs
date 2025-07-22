@@ -23,7 +23,14 @@ namespace PlanItNoww
             services.AddTransient<UsersService>();
             services.AddTransient<ReferenceTypeService>();
             services.AddScoped<ReferenceValueService>();
-         
+            services.AddTransient<UserProfilesService>();
+            services.AddTransient<RolesService>();
+            services.AddTransient<AadhaarVerificationsService>();
+            services.AddTransient<OTPsService>();
+            services.AddTransient<PaymentsService>();
+            services.AddTransient<PermissionsReferenceService>();
+
+
             //        services.AddScoped<OrganisationServiceTimingService>();
 
 
