@@ -89,9 +89,9 @@ temp.modifiedon = reader["modifiedon"] == DBNull.Value ? Base.GetMinimumDate() :
                 aadhaarverifications.isactive = true;
                 aadhaarverifications.version = 1;
                 aadhaarverifications.createdon = DateTime.UtcNow;
-                aadhaarverifications.createdby = requeststate.usercontext.id;
+                aadhaarverifications.createdby = requeststate.usercontext.userid;
                 aadhaarverifications.modifiedon = DateTime.UtcNow;
-                aadhaarverifications.modifiedby = requeststate.usercontext.id;
+                aadhaarverifications.modifiedby = requeststate.usercontext.userid;
 
                 DbCommand command = db.GetCommand(query);
 
@@ -148,7 +148,7 @@ db.AddParameter(command, "issuspended", DbTypes.Types.Boolean).Value = aadhaarve
                 var command = queryBuilder.GetCommand(db);
                 
                 aadhaarverifications.modifiedon = DateTime.UtcNow;
-                aadhaarverifications.modifiedby = requeststate.usercontext.id;
+                aadhaarverifications.modifiedby = requeststate.usercontext.userid;
                 
                 db.AddParameter(command, "id", DbTypes.Types.Long).Value = aadhaarverifications.id;
 db.AddParameter(command, "userid", DbTypes.Types.Long).Value = aadhaarverifications.userid;
@@ -199,7 +199,7 @@ db.AddParameter(command, "issuspended", DbTypes.Types.Boolean).Value = aadhaarve
                 DbCommand command = queryBuilder.GetCommand(db);
                 db.AddParameter(command, "id", DbTypes.Types.Long).Value = aadhaarverifications.id;
                 db.AddParameter(command, "version", DbTypes.Types.Integer).Value = aadhaarverifications.version;
-                db.AddParameter(command, "modifiedby", DbTypes.Types.Long).Value = requeststate.usercontext.id;
+                db.AddParameter(command, "modifiedby", DbTypes.Types.Long).Value = requeststate.usercontext.userid;
                 db.AddParameter(command, "modifiedon", DbTypes.Types.DateTime).Value = DateTime.UtcNow;
                 if (await db.ExecuteNonQuery(command) > 0)
                 {

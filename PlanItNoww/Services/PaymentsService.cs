@@ -91,9 +91,9 @@ temp.createdon = reader["createdon"] == DBNull.Value ? Base.GetMinimumDate() : C
                 payments.isactive = true;
                 payments.version = 1;
                 payments.createdon = DateTime.UtcNow;
-                payments.createdby = requeststate.usercontext.id;
+                payments.createdby = requeststate.usercontext.userid;
                 payments.modifiedon = DateTime.UtcNow;
-                payments.modifiedby = requeststate.usercontext.id;
+                payments.modifiedby = requeststate.usercontext.userid;
 
                 DbCommand command = db.GetCommand(query);
 
@@ -152,7 +152,7 @@ db.AddParameter(command, "createdon", DbTypes.Types.DateTime).Value = payments.c
                 var command = queryBuilder.GetCommand(db);
                 
                 payments.modifiedon = DateTime.UtcNow;
-                payments.modifiedby = requeststate.usercontext.id;
+                payments.modifiedby = requeststate.usercontext.userid;
                 
                 db.AddParameter(command, "id", DbTypes.Types.Long).Value = payments.id;
 db.AddParameter(command, "userid", DbTypes.Types.Long).Value = payments.userid;
@@ -207,7 +207,7 @@ db.AddParameter(command, "metadata", DbTypes.Types.Json).Value = payments.metada
                 DbCommand command = queryBuilder.GetCommand(db);
                 db.AddParameter(command, "id", DbTypes.Types.Long).Value = payments.id;
                 db.AddParameter(command, "version", DbTypes.Types.Integer).Value = payments.version;
-                db.AddParameter(command, "modifiedby", DbTypes.Types.Long).Value = requeststate.usercontext.id;
+                db.AddParameter(command, "modifiedby", DbTypes.Types.Long).Value = requeststate.usercontext.userid;
                 db.AddParameter(command, "modifiedon", DbTypes.Types.DateTime).Value = DateTime.UtcNow;
                 if (await db.ExecuteNonQuery(command) > 0)
                 {

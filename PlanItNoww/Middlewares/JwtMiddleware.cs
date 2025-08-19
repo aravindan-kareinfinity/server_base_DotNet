@@ -50,7 +50,7 @@ namespace PlanItNoww.Middlewares
         {
             try
             {
-                httpcontextaccessor.HttpContext.Items["usercontext"] = usersservice.JwtTokenToUserContext(token);               
+                httpcontextaccessor.HttpContext.Items["usercontext"] = usersservice.jwtTokenToUserContext(token);               
             }
             catch (Exception)
             {

@@ -91,9 +91,9 @@ temp.notes = reader["notes"] == DBNull.Value ? "" : reader["notes"].ToString();
                 referencetype.isactive = true;
                 referencetype.version = 1;
                 referencetype.createdon = DateTime.UtcNow;
-                referencetype.createdby = requeststate.usercontext.id;
+                referencetype.createdby = requeststate.usercontext.userid;
                 referencetype.modifiedon = DateTime.UtcNow;
-                referencetype.modifiedby = requeststate.usercontext.id;
+                referencetype.modifiedby = requeststate.usercontext.userid;
 
                 DbCommand command = db.GetCommand(query);
 
@@ -152,7 +152,7 @@ db.AddParameter(command, "notes", DbTypes.Types.String).Value = String.IsNullOrE
                 var command = queryBuilder.GetCommand(db);
                 
                 referencetype.modifiedon = DateTime.UtcNow;
-                referencetype.modifiedby = requeststate.usercontext.id;
+                referencetype.modifiedby = requeststate.usercontext.userid;
                 
                 db.AddParameter(command, "id", DbTypes.Types.Long).Value = referencetype.id;
 db.AddParameter(command, "identifier", DbTypes.Types.String).Value = String.IsNullOrEmpty(referencetype.identifier) ? "" : referencetype.identifier;
@@ -205,7 +205,7 @@ db.AddParameter(command, "notes", DbTypes.Types.String).Value = String.IsNullOrE
                 DbCommand command = queryBuilder.GetCommand(db);
                 db.AddParameter(command, "id", DbTypes.Types.Long).Value = referencetype.id;
                 db.AddParameter(command, "version", DbTypes.Types.Integer).Value = referencetype.version;
-                db.AddParameter(command, "modifiedby", DbTypes.Types.Long).Value = requeststate.usercontext.id;
+                db.AddParameter(command, "modifiedby", DbTypes.Types.Long).Value = requeststate.usercontext.userid;
                 db.AddParameter(command, "modifiedon", DbTypes.Types.DateTime).Value = DateTime.UtcNow;
                 if (await db.ExecuteNonQuery(command) > 0)
                 {

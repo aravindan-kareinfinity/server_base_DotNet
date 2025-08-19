@@ -87,9 +87,9 @@ temp.cancellationreason = reader["cancellationreason"] == DBNull.Value ? "" : re
                 subscriptions.isactive = true;
                 subscriptions.version = 1;
                 subscriptions.createdon = DateTime.UtcNow;
-                subscriptions.createdby = requeststate.usercontext.id;
+                subscriptions.createdby = requeststate.usercontext.userid;
                 subscriptions.modifiedon = DateTime.UtcNow;
-                subscriptions.modifiedby = requeststate.usercontext.id;
+                subscriptions.modifiedby = requeststate.usercontext.userid;
 
                 DbCommand command = db.GetCommand(query);
 
@@ -144,7 +144,7 @@ db.AddParameter(command, "cancellationreason", DbTypes.Types.String).Value = Str
                 var command = queryBuilder.GetCommand(db);
                 
                 subscriptions.modifiedon = DateTime.UtcNow;
-                subscriptions.modifiedby = requeststate.usercontext.id;
+                subscriptions.modifiedby = requeststate.usercontext.userid;
                 
                 db.AddParameter(command, "id", DbTypes.Types.Long).Value = subscriptions.id;
 db.AddParameter(command, "userid", DbTypes.Types.String).Value = String.IsNullOrEmpty(subscriptions.userid) ? "" : subscriptions.userid;
@@ -195,7 +195,7 @@ db.AddParameter(command, "cancellationreason", DbTypes.Types.String).Value = Str
                 DbCommand command = queryBuilder.GetCommand(db);
                 db.AddParameter(command, "id", DbTypes.Types.Long).Value = subscriptions.id;
                 db.AddParameter(command, "version", DbTypes.Types.Integer).Value = subscriptions.version;
-                db.AddParameter(command, "modifiedby", DbTypes.Types.Long).Value = requeststate.usercontext.id;
+                db.AddParameter(command, "modifiedby", DbTypes.Types.Long).Value = requeststate.usercontext.userid;
                 db.AddParameter(command, "modifiedon", DbTypes.Types.DateTime).Value = DateTime.UtcNow;
                 if (await db.ExecuteNonQuery(command) > 0)
                 {

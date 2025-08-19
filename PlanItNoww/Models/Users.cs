@@ -9,6 +9,7 @@ namespace PlanItNoww.Models
         public string mobile { get; set; }
         public string passwordhash { get; set; }
         public string googleid { get; set; }
+        public string facebookid { get; set; }
         public long roleid { get; set; }
         public string pushnotificationtoken { get; set; }
         public bool isemailverified { get; set; }
@@ -24,6 +25,10 @@ namespace PlanItNoww.Models
         public bool isactive { get; set; }
         public bool issuspended { get; set; }
 
+        public string salt { get; set; }
+        public string accesstoken { get; set; }
+        public string refreshtoken { get; set; }
+
         public AttributesData Attributes { get; set; }
 
         [JsonIgnore]
@@ -36,27 +41,28 @@ namespace PlanItNoww.Models
                     Attributes = JsonSerializer.Deserialize<AttributesData>(value);
             }
         }
-
-
-
-
-    
-
-                
     }
+    
     public class AttributesData
     {
-
-                }
-public class UsersSelectReq
+        // Custom attributes can be added here
+    }
+    
+    public class UsersSelectReq
     {
         public long id { get; set; }
+        public string email { get; set; }
+        public string mobile { get; set; }
+        public string googleid { get; set; }
+        public string facebookid { get; set; }
     }
+    
     public class UsersDeleteReq
     {
         public long id { get; set; }
         public int version { get; set; }
     }
+    
     public class UsersContext
     {
         public long userid { get; set; }
