@@ -123,6 +123,53 @@ namespace PlanItNoww.Controllers
             }
         }
 
+        [HttpPost("OTP/Get")]
+        public async Task<ActionResult<OTPVerificationRes>> GetOTP([FromBody] GetOTPReq req)
+        {
+            try
+            {
+                var result = await usersService.GetOTP(req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Get OTP failed");
+                return BadRequest(new OTPVerificationRes { success = false, message = "Get OTP failed" });
+            }
+        }
+
+        // Signup Endpoints
+
+        [HttpPost("Signup/Mobile")]
+        public async Task<ActionResult<SignupResponse>> SignupWithMobile([FromBody] MobileSignupReq req)
+        {
+            try
+            {
+                var result = await usersService.SignupWithMobile(req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Mobile signup failed");
+                return BadRequest(new SignupResponse { success = false, message = "Signup failed" });
+            }
+        }
+
+        [HttpPost("Signup/Gmail")]
+        public async Task<ActionResult<SignupResponse>> SignupWithGmail([FromBody] GmailSignupReq req)
+        {
+            try
+            {
+                var result = await usersService.SignupWithGmail(req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Gmail signup failed");
+                return BadRequest(new SignupResponse { success = false, message = "Signup failed" });
+            }
+        }
+
         // User Registration
         [HttpPost("Register")]
         public async Task<ActionResult<AuthResponse>> Register([FromBody] Users user)

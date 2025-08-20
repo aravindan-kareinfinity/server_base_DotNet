@@ -324,34 +324,36 @@ namespace PlanItNoww.Services
             try
             {
                 // Validate input
-                if (string.IsNullOrEmpty(req.googleid) || string.IsNullOrEmpty(req.email))
+                if (string.IsNullOrEmpty(req.idToken))
                 {
                     response.success = false;
-                    response.message = "Google ID and email are required";
+                    response.message = "Google ID token is required";
                     return response;
                 }
 
-                if (!SecurityUtils.IsValidEmail(req.email))
+                // Verify Google ID token (this is a placeholder - implement actual Google token verification)
+                var googleUserInfo = await VerifyGoogleToken(req.idToken);
+                if (googleUserInfo == null)
                 {
                     response.success = false;
-                    response.message = "Invalid email format";
+                    response.message = "Invalid Google token";
                     return response;
                 }
 
                 // Check if user exists with this Google ID
-                var users = await Select(new UsersSelectReq { googleid = req.googleid });
+                var users = await Select(new UsersSelectReq { googleid = googleUserInfo.googleId });
                 var user = users.FirstOrDefault();
 
                 if (user == null)
                 {
                     // Check if user exists with this email
-                    var emailUsers = await Select(new UsersSelectReq { email = req.email });
+                    var emailUsers = await Select(new UsersSelectReq { email = googleUserInfo.email });
                     var emailUser = emailUsers.FirstOrDefault();
 
                     if (emailUser != null)
                     {
                         // Update existing user with Google ID
-                        emailUser.googleid = req.googleid;
+                        emailUser.googleid = googleUserInfo.googleId;
                         emailUser.isemailverified = true;
                         await Update(emailUser);
                         user = emailUser;
@@ -361,8 +363,8 @@ namespace PlanItNoww.Services
                         // Create new user
                         user = new Users
                         {
-                            email = req.email,
-                            googleid = req.googleid,
+                            email = googleUserInfo.email,
+                            googleid = googleUserInfo.googleId,
                             isemailverified = true,
                             isactive = true,
                             roleid = 1, // Default role
@@ -407,52 +409,35 @@ namespace PlanItNoww.Services
             try
             {
                 // Validate input
-                if (string.IsNullOrEmpty(req.facebookid) || string.IsNullOrEmpty(req.email))
+                if (string.IsNullOrEmpty(req.accessToken))
                 {
                     response.success = false;
-                    response.message = "Facebook ID and email are required";
+                    response.message = "Facebook access token is required";
                     return response;
                 }
 
-                if (!SecurityUtils.IsValidEmail(req.email))
-                {
-                    response.success = false;
-                    response.message = "Invalid email format";
-                    return response;
-                }
+                // TODO: Implement Facebook token verification
+                // For now, we'll use the userId as the Facebook ID
+                var facebookId = req.userId ?? "temp_facebook_id_" + Guid.NewGuid().ToString("N");
 
                 // Check if user exists with this Facebook ID
-                var users = await Select(new UsersSelectReq { facebookid = req.facebookid });
+                var users = await Select(new UsersSelectReq { facebookid = facebookId });
                 var user = users.FirstOrDefault();
 
                 if (user == null)
                 {
-                    // Check if user exists with this email
-                    var emailUsers = await Select(new UsersSelectReq { email = req.email });
-                    var emailUser = emailUsers.FirstOrDefault();
-
-                    if (emailUser != null)
+                    // TODO: Extract email from Facebook token verification
+                    // For now, we'll create a user without email
+                    // Create new user
+                    user = new Users
                     {
-                        // Update existing user with Facebook ID
-                        emailUser.facebookid = req.facebookid;
-                        emailUser.isemailverified = true;
-                        await Update(emailUser);
-                        user = emailUser;
-                    }
-                    else
-                    {
-                        // Create new user
-                        user = new Users
-                        {
-                            email = req.email,
-                            facebookid = req.facebookid,
-                            isemailverified = true,
-                            isactive = true,
-                            roleid = 1, // Default role
-                            version = 1
-                        };
-                        user = await Insert(user);
-                    }
+                        facebookid = facebookId,
+                        isemailverified = false,
+                        isactive = true,
+                        roleid = 1, // Default role
+                        version = 1
+                    };
+                    user = await Insert(user);
                 }
 
                 // Check if user is active
@@ -581,6 +566,85 @@ namespace PlanItNoww.Services
             return response;
         }
 
+        // Get OTP for signup/login
+        public async Task<OTPVerificationRes> GetOTP(GetOTPReq req)
+        {
+            var response = new OTPVerificationRes();
+            
+            try
+            {
+                // Validate input
+                if (string.IsNullOrEmpty(req.mobile) && string.IsNullOrEmpty(req.email))
+                {
+                    response.success = false;
+                    response.message = "Either mobile or email is required";
+                    return response;
+                }
+
+                if (string.IsNullOrEmpty(req.purpose))
+                {
+                    response.success = false;
+                    response.message = "Purpose is required";
+                    return response;
+                }
+
+                // Check if user already exists for signup
+                if (req.purpose.ToUpper() == "SIGNUP")
+                {
+                    if (!string.IsNullOrEmpty(req.mobile))
+                    {
+                        var existingMobileUsers = await Select(new UsersSelectReq { mobile = req.mobile });
+                        if (existingMobileUsers.Any())
+                        {
+                            response.success = false;
+                            response.message = "User with this mobile number already exists";
+                            return response;
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(req.email))
+                    {
+                        var existingEmailUsers = await Select(new UsersSelectReq { email = req.email });
+                        if (existingEmailUsers.Any())
+                        {
+                            response.success = false;
+                            response.message = "User with this email already exists";
+                            return response;
+                        }
+                    }
+                }
+
+                // Generate and send OTP
+                var otpReq = new GenerateOTPReq
+                {
+                    mobile = req.mobile,
+                    email = req.email,
+                    purpose = req.purpose
+                };
+
+                var otpResult = await GenerateOTP(otpReq);
+                if (otpResult.success)
+                {
+                    response.success = true;
+                    response.message = $"OTP sent successfully for {req.purpose.ToLower()}";
+                    response.isvalid = true;
+                }
+                else
+                {
+                    response.success = false;
+                    response.message = otpResult.message;
+                }
+            }
+            catch (Exception ex)
+            {
+                response.success = false;
+                response.message = "Get OTP failed: " + ex.Message;
+                logger.LogError(ex, "Get OTP failed for purpose: {Purpose}", req.purpose);
+            }
+
+            return response;
+        }
+
         // Create user session and generate tokens
         public async Task<AuthResponse> CreateUserSession(Users user)
         {
@@ -704,6 +768,220 @@ namespace PlanItNoww.Services
                 }
             }
             return result;
+        }
+
+        // Signup Methods
+
+        // Signup with Mobile + OTP
+        public async Task<SignupResponse> SignupWithMobile(MobileSignupReq req)
+        {
+            var response = new SignupResponse();
+            
+            try
+            {
+                // Validate input
+                if (string.IsNullOrEmpty(req.mobile) || string.IsNullOrEmpty(req.otpcode) || string.IsNullOrEmpty(req.fullName))
+                {
+                    response.success = false;
+                    response.message = "Mobile, OTP code, and full name are required";
+                    return response;
+                }
+
+                // Verify OTP
+                var otpService = new OTPsService(dbprovider, querybuilderprovider, requeststate);
+                var otpReq = new OTPsSelectReq { mobile = req.mobile, otpcode = req.otpcode };
+                var otps = await otpService.Select(otpReq);
+                var otp = otps.FirstOrDefault();
+
+                if (otp == null || otp.isused || otp.expiresat < DateTime.UtcNow)
+                {
+                    response.success = false;
+                    response.message = "Invalid or expired OTP";
+                    return response;
+                }
+
+                // Check if user already exists
+                var existingUsers = await Select(new UsersSelectReq { mobile = req.mobile });
+                if (existingUsers.Any())
+                {
+                    response.success = false;
+                    response.message = "User with this mobile number already exists";
+                    return response;
+                }
+
+                // Create new user
+                var newUser = new Users
+                {
+                    fullname = req.fullName,
+                    mobile = req.mobile,
+                    email = req.email,
+                    dateofbirth = req.dateOfBirth,
+                    gender = req.gender,
+                    profilepicture = req.profilePicture,
+                    ismobileverified = true,
+                    isemailverified = !string.IsNullOrEmpty(req.email),
+                    isactive = true,
+                    issuspended = false,
+                    version = 1,
+                    createdon = DateTime.UtcNow,
+                    modifiedon = DateTime.UtcNow
+                };
+
+                // Insert user
+                var insertResult = await Insert(newUser);
+                if (insertResult.id <= 0)
+                {
+                    response.success = false;
+                    response.message = "Failed to create user account";
+                    return response;
+                }
+
+                // Mark OTP as used
+                otp.isused = true;
+                await otpService.Update(otp);
+
+                // Generate tokens and session
+                var authResult = await CreateUserSession(newUser);
+                response.success = true;
+                response.message = "Signup successful";
+                response.accesstoken = authResult.accesstoken;
+                response.refreshtoken = authResult.refreshtoken;
+                response.user = authResult.user;
+                response.session = authResult.session;
+                response.expiresin = 60;
+            }
+            catch (Exception ex)
+            {
+                response.success = false;
+                response.message = "Signup failed: " + ex.Message;
+                logger.LogError(ex, "Mobile signup failed for mobile: {Mobile}", req.mobile);
+            }
+
+            return response;
+        }
+
+        // Signup with Gmail
+        public async Task<SignupResponse> SignupWithGmail(GmailSignupReq req)
+        {
+            var response = new SignupResponse();
+            
+            try
+            {
+                // Validate input
+                if (string.IsNullOrEmpty(req.idToken) || string.IsNullOrEmpty(req.fullName))
+                {
+                    response.success = false;
+                    response.message = "Google ID token and full name are required";
+                    return response;
+                }
+
+                // Verify Google ID token (this is a placeholder - implement actual Google token verification)
+                var googleUserInfo = await VerifyGoogleToken(req.idToken);
+                if (googleUserInfo == null)
+                {
+                    response.success = false;
+                    response.message = "Invalid Google token";
+                    return response;
+                }
+
+                // Check if user already exists by Google ID
+                var existingUsers = await Select(new UsersSelectReq { googleid = googleUserInfo.googleId });
+                if (existingUsers.Any())
+                {
+                    response.success = false;
+                    response.message = "User with this Google account already exists";
+                    return response;
+                }
+
+                // Check if email already exists
+                if (!string.IsNullOrEmpty(googleUserInfo.email))
+                {
+                    var existingEmailUsers = await Select(new UsersSelectReq { email = googleUserInfo.email });
+                    if (existingEmailUsers.Any())
+                    {
+                        response.success = false;
+                        response.message = "User with this email already exists";
+                        return response;
+                    }
+                }
+
+                // Create new user
+                var newUser = new Users
+                {
+                    fullname = req.fullName,
+                    email = googleUserInfo.email,
+                    mobile = req.mobile,
+                    googleid = googleUserInfo.googleId,
+                    dateofbirth = req.dateOfBirth,
+                    gender = req.gender,
+                    profilepicture = req.profilePicture ?? googleUserInfo.profilePicture,
+                    isemailverified = true,
+                    ismobileverified = !string.IsNullOrEmpty(req.mobile),
+                    isactive = true,
+                    issuspended = false,
+                    version = 1,
+                    createdon = DateTime.UtcNow,
+                    modifiedon = DateTime.UtcNow
+                };
+
+                // Insert user
+                var insertResult = await Insert(newUser);
+                if (insertResult.id <= 0)
+                {
+                    response.success = false;
+                    response.message = "Failed to create user account";
+                    return response;
+                }
+
+                // Generate tokens and session
+                var authResult = await CreateUserSession(newUser);
+                response.success = true;
+                response.message = "Signup successful";
+                response.accesstoken = authResult.accesstoken;
+                response.refreshtoken = authResult.refreshtoken;
+                response.user = authResult.user;
+                response.session = authResult.session;
+                response.expiresin = 60;
+            }
+            catch (Exception ex)
+            {
+                response.success = false;
+                response.message = "Signup failed: " + ex.Message;
+                logger.LogError(ex, "Gmail signup failed for email: {Email}", req.idToken);
+            }
+
+            return response;
+        }
+
+        // Helper method to verify Google token (placeholder implementation)
+        private async Task<GoogleUserInfo> VerifyGoogleToken(string idToken)
+        {
+            // TODO: Implement actual Google token verification
+            // This should call Google's tokeninfo endpoint or use Google's client library
+            try
+            {
+                // For now, return a mock user info
+                // In production, implement proper Google token verification
+                return new GoogleUserInfo
+                {
+                    googleId = "mock_google_id_" + Guid.NewGuid().ToString("N"),
+                    email = "mock@example.com",
+                    profilePicture = "https://example.com/profile.jpg"
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to verify Google token");
+                return null;
+            }
+        }
+
+        // Helper class for Google user info
+        private class GoogleUserInfo
+        {
+            public string googleId { get; set; }
+            public string email { get; set; }
+            public string profilePicture { get; set; }
         }
 
         public async Task<Users> Insert(Users users)

@@ -7,6 +7,10 @@ namespace PlanItNoww.Models
         public long id { get; set; }
         public string email { get; set; }
         public string mobile { get; set; }
+        public string fullname { get; set; }
+        public DateTime? dateofbirth { get; set; }
+        public string gender { get; set; }
+        public string profilepicture { get; set; }
         public string passwordhash { get; set; }
         public string googleid { get; set; }
         public string facebookid { get; set; }
